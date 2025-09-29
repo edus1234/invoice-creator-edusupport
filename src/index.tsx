@@ -310,14 +310,29 @@ app.get('/', (c) => {
                             <h3 class="font-medium mb-3 text-gray-700">振込先口座情報</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">銀行名</label>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">金融機関種別</label>
+                                    <select id="bankType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                            onchange="updatePreview(); saveFormData()">
+                                        <option value="">選択してください</option>
+                                        <option value="銀行">銀行</option>
+                                        <option value="信用金庫">信用金庫</option>
+                                        <option value="信用組合">信用組合</option>
+                                        <option value="労働金庫">労働金庫</option>
+                                        <option value="農業協同組合">農業協同組合</option>
+                                        <option value="郵便局">郵便局（ゆうちょ銀行）</option>
+                                        <option value="ネット銀行">ネット銀行</option>
+                                        <option value="その他">その他</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">金融機関名</label>
                                     <input type="text" id="bankName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                           placeholder="○○銀行" onchange="updatePreview(); saveFormData()">
+                                           placeholder="○○銀行 / ○○信用金庫" onchange="updatePreview(); saveFormData()">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-600 mb-1">支店名</label>
                                     <input type="text" id="branchName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                           placeholder="△△支店" onchange="updatePreview(); saveFormData()">
+                                           placeholder="△△支店 / ○○営業部" onchange="updatePreview(); saveFormData()">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-600 mb-1">口座種別</label>
@@ -326,6 +341,7 @@ app.get('/', (c) => {
                                         <option value="">選択してください</option>
                                         <option value="普通">普通</option>
                                         <option value="当座">当座</option>
+                                        <option value="貯蓄">貯蓄</option>
                                     </select>
                                 </div>
                                 <div>
@@ -333,11 +349,17 @@ app.get('/', (c) => {
                                     <input type="text" id="accountNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="1234567" onchange="updatePreview(); saveFormData()">
                                 </div>
-                                <div class="md:col-span-2">
+                                <div>
                                     <label class="block text-sm font-medium text-gray-600 mb-1">口座名義</label>
                                     <input type="text" id="accountHolder" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                            placeholder="ヤマダ タロウ" onchange="updatePreview(); saveFormData()">
                                 </div>
+                            </div>
+                            <div class="mt-3">
+                                <p class="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                                    <i class="fas fa-info-circle mr-2 text-yellow-600"></i>
+                                    <strong>振込手数料について：</strong>振込手数料はご負担願います。
+                                </p>
                             </div>
                         </div>
 

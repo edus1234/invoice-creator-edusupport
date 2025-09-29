@@ -193,6 +193,7 @@ function updatePreview() {
         taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
         taxMode: document.getElementById('taxMode').value,
         // 振込先口座情報
+        bankType: document.getElementById('bankType').value,
         bankName: document.getElementById('bankName').value,
         branchName: document.getElementById('branchName').value,
         accountType: document.getElementById('accountType').value,
@@ -350,11 +351,15 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
                 ${(data.bankName || data.branchName || data.accountNumber || data.accountHolder) ? `
                     <div>
                         <h3 class="font-semibold text-gray-700 mb-3 pb-1 border-b">振込先</h3>
-                        <div class="text-sm space-y-1">
-                            ${data.bankName ? `<div><span class="text-gray-600">銀行名:</span> ${data.bankName}</div>` : ''}
+                        <div class="text-sm space-y-1 mb-3">
+                            ${data.bankType && data.bankName ? `<div><span class="text-gray-600">${data.bankType}:</span> ${data.bankName}</div>` : 
+                              data.bankName ? `<div><span class="text-gray-600">金融機関:</span> ${data.bankName}</div>` : ''}
                             ${data.branchName ? `<div><span class="text-gray-600">支店名:</span> ${data.branchName}</div>` : ''}
                             ${data.accountType && data.accountNumber ? `<div><span class="text-gray-600">口座:</span> ${data.accountType} ${data.accountNumber}</div>` : ''}
                             ${data.accountHolder ? `<div><span class="text-gray-600">名義:</span> ${data.accountHolder}</div>` : ''}
+                        </div>
+                        <div class="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded p-2">
+                            <i class="fas fa-info-circle mr-1"></i>振込手数料はご負担願います
                         </div>
                     </div>
                 ` : ''}
@@ -414,6 +419,7 @@ function saveFormData() {
             taxMode: document.getElementById('taxMode').value,
             
             // 振込先口座情報
+            bankType: document.getElementById('bankType').value,
             bankName: document.getElementById('bankName').value,
             branchName: document.getElementById('branchName').value,
             accountType: document.getElementById('accountType').value,
@@ -473,6 +479,7 @@ function loadFormData(showMessage = true) {
         document.getElementById('taxMode').value = formData.taxMode || 'exclusive';
         
         // 振込先口座情報を復元
+        document.getElementById('bankType').value = formData.bankType || '';
         document.getElementById('bankName').value = formData.bankName || '';
         document.getElementById('branchName').value = formData.branchName || '';
         document.getElementById('accountType').value = formData.accountType || '';
@@ -529,7 +536,7 @@ function clearFormData() {
                     element.value = '10';
                 } else if (element.id === 'taxMode') {
                     element.value = 'exclusive';
-                } else if (element.id === 'accountType') {
+                } else if (element.id === 'accountType' || element.id === 'bankType') {
                     element.value = '';
                 } else {
                     element.value = '';
