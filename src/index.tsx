@@ -263,30 +263,8 @@ app.get('/', (c) => {
                             基本情報入力
                         </h2>
 
-                        <!-- 請求元・請求先情報 -->
+                        <!-- 請求先・発行者情報 -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <!-- 請求元 -->
-                            <div>
-                                <h3 class="font-medium mb-3 text-gray-700">請求元</h3>
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-1">会社名（お名前）</label>
-                                        <input type="text" id="billerCompany" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                               placeholder="山田太郎 / 株式会社サンプル" onchange="updatePreview(); saveFormData()">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-1">インボイス登録番号</label>
-                                        <input type="text" id="invoiceRegistrationNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                               placeholder="T1234567890123" onchange="updatePreview(); saveFormData()">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-1">住所</label>
-                                        <textarea id="billerAddress" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
-                                                  placeholder="東京都渋谷区..." onchange="updatePreview(); saveFormData()"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- 請求先 -->
                             <div>
                                 <h3 class="font-medium mb-3 text-gray-700">請求先</h3>
@@ -303,10 +281,68 @@ app.get('/', (c) => {
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- 発行者 -->
+                            <div>
+                                <h3 class="font-medium mb-3 text-gray-700">発行者</h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-1">会社名（お名前）</label>
+                                        <input type="text" id="billerCompany" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                               placeholder="山田太郎 / 株式会社サンプル" onchange="updatePreview(); saveFormData()">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-1">インボイス登録番号</label>
+                                        <input type="text" id="invoiceRegistrationNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                               placeholder="T1234567890123" onchange="updatePreview(); saveFormData()">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-600 mb-1">住所</label>
+                                        <textarea id="billerAddress" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
+                                                  placeholder="東京都渋谷区..." onchange="updatePreview(); saveFormData()"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 振込先口座情報 -->
+                        <div class="mb-6">
+                            <h3 class="font-medium mb-3 text-gray-700">振込先口座情報</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">銀行名</label>
+                                    <input type="text" id="bankName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                           placeholder="○○銀行" onchange="updatePreview(); saveFormData()">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">支店名</label>
+                                    <input type="text" id="branchName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                           placeholder="△△支店" onchange="updatePreview(); saveFormData()">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">口座種別</label>
+                                    <select id="accountType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                            onchange="updatePreview(); saveFormData()">
+                                        <option value="">選択してください</option>
+                                        <option value="普通">普通</option>
+                                        <option value="当座">当座</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">口座番号</label>
+                                    <input type="text" id="accountNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                           placeholder="1234567" onchange="updatePreview(); saveFormData()">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">口座名義</label>
+                                    <input type="text" id="accountHolder" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                           placeholder="ヤマダ タロウ" onchange="updatePreview(); saveFormData()">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 請求書基本情報 -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">請求書番号</label>
                                 <input type="text" id="invoiceNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
@@ -315,7 +351,12 @@ app.get('/', (c) => {
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">発行日 *</label>
                                 <input type="date" id="invoiceDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                       onchange="updatePreview(); saveFormData()" required>
+                                       onchange="updatePreview(); saveFormData(); calculateDueDate()" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 mb-1">支払期限</label>
+                                <input type="date" id="dueDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
+                                       onchange="updatePreview(); saveFormData()" readonly title="発行日翌月末まで（自動計算）">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">税率 (%)</label>

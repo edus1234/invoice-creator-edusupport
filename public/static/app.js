@@ -12,6 +12,9 @@ function initializePage() {
     // 初期値設定
     document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
     
+    // 支払期限を自動計算
+    calculateDueDate();
+    
     // 自動番号生成（任意）
     generateInvoiceNumber();
     
@@ -33,6 +36,26 @@ function generateInvoiceNumber() {
     const day = String(today.getDate()).padStart(2, '0');
     const invoiceNumber = `INV-${year}${month}${day}-001`;
     document.getElementById('invoiceNumber').value = invoiceNumber;
+}
+
+// 支払期限の自動計算（発行日翌月末まで）
+function calculateDueDate() {
+    const invoiceDate = document.getElementById('invoiceDate').value;
+    if (!invoiceDate) return;
+    
+    const date = new Date(invoiceDate);
+    // 翌月に移動
+    date.setMonth(date.getMonth() + 1);
+    // その月の末日を取得（0日は前月の末日）
+    const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    
+    // YYYY-MM-DD形式で設定
+    const year = nextMonth.getFullYear();
+    const month = String(nextMonth.getMonth() + 1).padStart(2, '0');
+    const day = String(nextMonth.getDate()).padStart(2, '0');
+    const dueDateStr = `${year}-${month}-${day}`;
+    
+    document.getElementById('dueDate').value = dueDateStr;
 }
 
 // 作業項目を追加
@@ -166,8 +189,15 @@ function updatePreview() {
         clientAddress: document.getElementById('clientAddress').value,
         invoiceNumber: document.getElementById('invoiceNumber').value,
         invoiceDate: document.getElementById('invoiceDate').value,
+        dueDate: document.getElementById('dueDate').value,
         taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
-        taxMode: document.getElementById('taxMode').value
+        taxMode: document.getElementById('taxMode').value,
+        // 振込先口座情報
+        bankName: document.getElementById('bankName').value,
+        branchName: document.getElementById('branchName').value,
+        accountType: document.getElementById('accountType').value,
+        accountNumber: document.getElementById('accountNumber').value,
+        accountHolder: document.getElementById('accountHolder').value
     };
     
     // 作業項目を取得
@@ -230,32 +260,27 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
     return `
         <div class="max-w-4xl mx-auto">
             <!-- ヘッダー -->
-            <div class="text-center mb-8">
+            <div class="text-center mb-6">
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">請求書</h1>
                 ${data.invoiceNumber ? `<div class="text-lg text-gray-600">No. ${data.invoiceNumber}</div>` : ''}
             </div>
             
-            <!-- 基本情報 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                <!-- 請求元 -->
-                <div>
-                    <h3 class="font-semibold text-gray-700 mb-3 pb-1 border-b">請求元</h3>
-                    ${data.billerCompany ? `<div class="font-medium text-lg mb-2">${data.billerCompany}</div>` : ''}
-                    ${data.invoiceRegistrationNumber ? `<div class="text-gray-700 mb-2">インボイス登録番号: ${data.invoiceRegistrationNumber}</div>` : ''}
-                    ${data.billerAddress ? `<div class="text-gray-600 text-sm whitespace-pre-line">${data.billerAddress}</div>` : ''}
+            <!-- 請求先を最初に表示 -->
+            ${data.clientCompany ? `
+                <div class="mb-6">
+                    <div class="text-right">
+                        <div class="inline-block text-left border-b-2 border-gray-300 pb-2">
+                            <div class="font-bold text-xl text-gray-800">${data.clientCompany}${data.clientCompany ? '　様' : ''}</div>
+                            ${data.clientAddress ? `<div class="text-gray-600 text-sm mt-1 whitespace-pre-line">${data.clientAddress}</div>` : ''}
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- 請求先 -->
-                <div>
-                    <h3 class="font-semibold text-gray-700 mb-3 pb-1 border-b">請求先</h3>
-                    ${data.clientCompany ? `<div class="font-medium text-lg mb-2">${data.clientCompany}</div>` : ''}
-                    ${data.clientAddress ? `<div class="text-gray-600 text-sm whitespace-pre-line">${data.clientAddress}</div>` : ''}
-                </div>
-            </div>
+            ` : ''}
             
-            <!-- 発行日 -->
+            <!-- 発行日・支払期限 -->
             <div class="text-right mb-6">
-                ${data.invoiceDate ? `<div class="text-gray-700">発行日: ${formatDate(data.invoiceDate)}</div>` : ''}
+                ${data.invoiceDate ? `<div class="text-gray-700 mb-1">発行日: ${formatDate(data.invoiceDate)}</div>` : ''}
+                ${data.dueDate ? `<div class="text-gray-700 font-medium">支払期限: ${formatDate(data.dueDate)}</div>` : ''}
             </div>
             
             <!-- 作業項目テーブル -->
@@ -285,7 +310,7 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
             ` : ''}
             
             <!-- 合計 -->
-            <div class="flex justify-end">
+            <div class="flex justify-end mb-8">
                 <div class="w-72">
                     <div class="border border-gray-300 bg-gray-50 p-4">
                         ${data.taxMode === 'inclusive' ? `
@@ -309,6 +334,30 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- 発行者情報 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 発行者 -->
+                <div>
+                    <h3 class="font-semibold text-gray-700 mb-3 pb-1 border-b">発行者</h3>
+                    ${data.billerCompany ? `<div class="font-medium text-lg mb-2">${data.billerCompany}</div>` : ''}
+                    ${data.invoiceRegistrationNumber ? `<div class="text-gray-700 mb-2">インボイス登録番号: ${data.invoiceRegistrationNumber}</div>` : ''}
+                    ${data.billerAddress ? `<div class="text-gray-600 text-sm whitespace-pre-line">${data.billerAddress}</div>` : ''}
+                </div>
+                
+                <!-- 振込先口座 -->
+                ${(data.bankName || data.branchName || data.accountNumber || data.accountHolder) ? `
+                    <div>
+                        <h3 class="font-semibold text-gray-700 mb-3 pb-1 border-b">振込先</h3>
+                        <div class="text-sm space-y-1">
+                            ${data.bankName ? `<div><span class="text-gray-600">銀行名:</span> ${data.bankName}</div>` : ''}
+                            ${data.branchName ? `<div><span class="text-gray-600">支店名:</span> ${data.branchName}</div>` : ''}
+                            ${data.accountType && data.accountNumber ? `<div><span class="text-gray-600">口座:</span> ${data.accountType} ${data.accountNumber}</div>` : ''}
+                            ${data.accountHolder ? `<div><span class="text-gray-600">名義:</span> ${data.accountHolder}</div>` : ''}
+                        </div>
+                    </div>
+                ` : ''}
             </div>
         </div>
     `;
@@ -360,8 +409,16 @@ function saveFormData() {
             clientAddress: document.getElementById('clientAddress').value,
             invoiceNumber: document.getElementById('invoiceNumber').value,
             invoiceDate: document.getElementById('invoiceDate').value,
+            dueDate: document.getElementById('dueDate').value,
             taxRate: document.getElementById('taxRate').value,
             taxMode: document.getElementById('taxMode').value,
+            
+            // 振込先口座情報
+            bankName: document.getElementById('bankName').value,
+            branchName: document.getElementById('branchName').value,
+            accountType: document.getElementById('accountType').value,
+            accountNumber: document.getElementById('accountNumber').value,
+            accountHolder: document.getElementById('accountHolder').value,
             
             // 作業項目
             workItems: []
@@ -411,8 +468,16 @@ function loadFormData(showMessage = true) {
         document.getElementById('clientAddress').value = formData.clientAddress || '';
         document.getElementById('invoiceNumber').value = formData.invoiceNumber || '';
         document.getElementById('invoiceDate').value = formData.invoiceDate || '';
+        document.getElementById('dueDate').value = formData.dueDate || '';
         document.getElementById('taxRate').value = formData.taxRate || '10';
         document.getElementById('taxMode').value = formData.taxMode || 'exclusive';
+        
+        // 振込先口座情報を復元
+        document.getElementById('bankName').value = formData.bankName || '';
+        document.getElementById('branchName').value = formData.branchName || '';
+        document.getElementById('accountType').value = formData.accountType || '';
+        document.getElementById('accountNumber').value = formData.accountNumber || '';
+        document.getElementById('accountHolder').value = formData.accountHolder || '';
         
         // 既存の作業項目をクリア
         document.getElementById('workItems').innerHTML = '';
@@ -464,6 +529,8 @@ function clearFormData() {
                     element.value = '10';
                 } else if (element.id === 'taxMode') {
                     element.value = 'exclusive';
+                } else if (element.id === 'accountType') {
+                    element.value = '';
                 } else {
                     element.value = '';
                 }
@@ -476,6 +543,9 @@ function clearFormData() {
             
             // 請求書番号を再生成
             generateInvoiceNumber();
+            
+            // 支払期限を再計算
+            calculateDueDate();
             
             // プレビュー更新
             updatePreview();
