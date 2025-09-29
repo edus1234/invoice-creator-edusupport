@@ -1,142 +1,294 @@
-/* 請求書自動作成システム用カスタムスタイル */
+/* 請求書自動作成システム - ワンページ形式用スタイル */
 
-.invoice-form-group {
-    @apply mb-4;
+/* フォーム要素の基本スタイル */
+.form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors;
 }
 
-.invoice-form-label {
-    @apply block text-sm font-medium text-gray-700 mb-2;
+.form-textarea {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-colors;
 }
 
-.invoice-form-input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+.form-label {
+    @apply block text-sm font-medium text-gray-600 mb-1;
 }
 
-.invoice-form-textarea {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none;
+/* 作業項目スタイル */
+.work-item {
+    @apply bg-gray-50 p-4 rounded-lg border border-gray-200 transition-all;
 }
 
-.invoice-table {
-    @apply w-full border-collapse border border-gray-300;
+.work-item:hover {
+    @apply border-gray-300 shadow-sm;
 }
 
-.invoice-table th {
-    @apply bg-gray-50 border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700;
-}
-
-.invoice-table td {
-    @apply border border-gray-300 px-4 py-2;
-}
-
-.invoice-summary {
-    @apply bg-gray-50 p-4 rounded-lg border border-gray-200;
-}
-
+/* ボタンスタイル */
 .btn-primary {
-    @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors;
+    @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium;
 }
 
 .btn-secondary {
-    @apply bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors;
+    @apply bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium;
 }
 
 .btn-success {
-    @apply bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors;
+    @apply bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium;
 }
 
 .btn-danger {
-    @apply bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors;
+    @apply bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium;
 }
 
-.btn-warning {
-    @apply bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors;
+.btn-small {
+    @apply px-3 py-1 text-sm rounded-md;
+}
+
+/* プレビューエリアのスタイル */
+#invoicePreview {
+    background: white;
+    min-height: 600px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+#invoicePreview table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#invoicePreview th,
+#invoicePreview td {
+    border: 1px solid #d1d5db;
+    padding: 8px 12px;
+}
+
+#invoicePreview th {
+    background-color: #f9fafb;
+    font-weight: 600;
+}
+
+/* 合計表示エリア */
+.totals-section {
+    @apply bg-gray-50 p-4 rounded-lg border border-gray-200;
+}
+
+.total-line {
+    @apply flex justify-between mb-2;
+}
+
+.total-line.grand-total {
+    @apply text-lg font-semibold border-t pt-2;
+}
+
+/* アイコンスタイル */
+.icon {
+    @apply w-5 h-5;
+}
+
+/* アラート・通知スタイル */
+.alert {
+    @apply px-4 py-3 rounded border;
 }
 
 .alert-success {
-    @apply bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded;
+    @apply bg-green-100 border-green-400 text-green-700;
 }
 
 .alert-error {
-    @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded;
+    @apply bg-red-100 border-red-400 text-red-700;
 }
 
-/* 請求書プレビュー用スタイル */
-.invoice-preview {
-    @apply bg-white p-8 border border-gray-300 rounded-lg shadow-sm;
-    max-width: 21cm;
-    margin: 0 auto;
+.alert-warning {
+    @apply bg-yellow-100 border-yellow-400 text-yellow-700;
 }
 
-.invoice-header {
-    @apply border-b border-gray-300 pb-4 mb-6;
+/* レスポンシブデザイン */
+@media (max-width: 1024px) {
+    .container {
+        @apply px-2;
+    }
+    
+    .grid.grid-cols-1.lg\\:grid-cols-2 {
+        @apply grid-cols-1;
+    }
 }
 
-.invoice-title {
-    @apply text-3xl font-bold text-gray-800 mb-2;
-}
-
-.invoice-details {
-    @apply grid grid-cols-2 gap-6 mb-6;
-}
-
-.invoice-items-table {
-    @apply w-full border-collapse mb-6;
-}
-
-.invoice-items-table th,
-.invoice-items-table td {
-    @apply border border-gray-300 px-3 py-2 text-sm;
-}
-
-.invoice-items-table th {
-    @apply bg-gray-50 font-semibold;
-}
-
-.invoice-total {
-    @apply ml-auto w-64;
-}
-
-/* モーダル用スタイル */
-.modal-header {
-    @apply flex justify-between items-center p-6 border-b;
-}
-
-.modal-body {
-    @apply p-6;
-}
-
-.modal-footer {
-    @apply flex justify-end space-x-3 p-6 border-t bg-gray-50;
-}
-
-/* レスポンシブ対応 */
 @media (max-width: 768px) {
-    .invoice-details {
+    .grid.grid-cols-1.md\\:grid-cols-2 {
         @apply grid-cols-1;
     }
     
-    .invoice-items-table {
-        @apply text-xs;
+    .grid.grid-cols-1.md\\:grid-cols-3 {
+        @apply grid-cols-1;
     }
     
-    .invoice-items-table th,
-    .invoice-items-table td {
-        @apply px-2 py-1;
+    .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4 {
+        @apply grid-cols-1;
+    }
+    
+    #invoicePreview {
+        font-size: 14px;
+    }
+    
+    #invoicePreview table {
+        font-size: 12px;
+    }
+    
+    #invoicePreview th,
+    #invoicePreview td {
+        padding: 6px 8px;
+    }
+    
+    .text-3xl {
+        @apply text-2xl;
+    }
+    
+    .text-xl {
+        @apply text-lg;
+    }
+}
+
+@media (max-width: 640px) {
+    .container {
+        @apply px-1 py-4;
+    }
+    
+    .work-item .grid {
+        @apply grid-cols-1 gap-2;
+    }
+    
+    .work-item input {
+        @apply text-sm;
+    }
+    
+    #invoicePreview {
+        font-size: 12px;
+        padding: 16px;
+        min-height: 400px;
+    }
+    
+    #invoicePreview .text-3xl {
+        @apply text-xl;
+    }
+    
+    #invoicePreview .text-lg {
+        @apply text-base;
+    }
+    
+    #invoicePreview table {
+        font-size: 10px;
+    }
+    
+    #invoicePreview th,
+    #invoicePreview td {
+        padding: 4px 6px;
+    }
+    
+    /* モバイル用のテーブル表示調整 */
+    #invoicePreview table th:nth-child(3),
+    #invoicePreview table td:nth-child(3),
+    #invoicePreview table th:nth-child(4),
+    #invoicePreview table td:nth-child(4) {
+        display: none;
     }
 }
 
 /* 印刷用スタイル */
 @media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
     body {
-        @apply text-black bg-white;
+        background: white !important;
+        color: black !important;
+        font-size: 14px;
+        line-height: 1.4;
     }
     
     .no-print {
         display: none !important;
     }
     
-    .invoice-preview {
-        @apply shadow-none border-0;
-        page-break-after: always;
+    #invoicePreview {
+        position: static !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 20px !important;
+        margin: 0 !important;
+        page-break-after: auto;
     }
+    
+    #invoicePreview table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+    
+    #invoicePreview th,
+    #invoicePreview td {
+        border: 1px solid #333 !important;
+        padding: 8px !important;
+        font-size: 12px !important;
+    }
+    
+    #invoicePreview th {
+        background-color: #f5f5f5 !important;
+    }
+    
+    /* 改ページ制御 */
+    .page-break {
+        page-break-before: always;
+    }
+    
+    .no-page-break {
+        page-break-inside: avoid;
+    }
+}
+
+/* アニメーション効果 */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* フォーカス効果の強化 */
+input:focus,
+textarea:focus,
+select:focus {
+    @apply ring-2 ring-blue-500 ring-opacity-50 border-blue-500;
+}
+
+/* ホバー効果 */
+.hover-scale {
+    transition: transform 0.2s ease-in-out;
+}
+
+.hover-scale:hover {
+    transform: scale(1.02);
+}
+
+/* スクロールバーのスタイリング */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
