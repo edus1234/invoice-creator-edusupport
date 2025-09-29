@@ -1,4 +1,4 @@
-// 請求書自動作成システム - ワンページ形式
+// 請求書自動作成システム - 個人事業主対応版
 
 // グローバル変数
 let workItemIndex = 0;
@@ -12,11 +12,14 @@ function initializePage() {
     // 初期値設定
     document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
     
-    // 自動番号生成
+    // 自動番号生成（任意）
     generateInvoiceNumber();
     
     // 初期作業項目を1つ追加
     addWorkItem();
+    
+    // 保存データがあれば読み込み
+    loadFormData(false); // サイレント読み込み
     
     // 初回プレビュー更新
     updatePreview();
@@ -48,25 +51,25 @@ function addWorkItem() {
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">日付 *</label>
                     <input type="date" class="work-date w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                           value="${new Date().toISOString().split('T')[0]}" onchange="updatePreview()" required>
+                           value="${new Date().toISOString().split('T')[0]}" onchange="updatePreview(); saveFormData()" required>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">作業内容 *</label>
                     <input type="text" class="work-description w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                           placeholder="例: ウェブサイト開発" onchange="updatePreview()" required>
+                           placeholder="例: ウェブサイト開発" onchange="updatePreview(); saveFormData()" required>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">時間 *</label>
                     <input type="number" step="0.5" class="work-hours w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                           placeholder="8.0" onchange="calculateItemAmount(${workItemIndex}); updatePreview()" required>
+                           placeholder="8.0" onchange="calculateItemAmount(${workItemIndex}); updatePreview(); saveFormData()" required>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">時給 *</label>
                     <input type="number" class="work-rate w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                           placeholder="5000" onchange="calculateItemAmount(${workItemIndex}); updatePreview()" required>
+                           placeholder="5000" onchange="calculateItemAmount(${workItemIndex}); updatePreview(); saveFormData()" required>
                 </div>
             </div>
             
@@ -89,6 +92,7 @@ function removeWorkItem(index) {
         item.remove();
         updateItemNumbers();
         updatePreview();
+        saveFormData();
     } else if (document.querySelectorAll('.work-item').length === 1) {
         alert('最低1つの作業項目は必要です');
     }
@@ -116,7 +120,7 @@ function calculateItemAmount(index) {
     calculateTotals();
 }
 
-// 合計金額計算
+// 合計金額計算（税込み・税抜き対応）
 function calculateTotals() {
     let subtotal = 0;
     const items = document.querySelectorAll('.work-item');
@@ -128,12 +132,25 @@ function calculateTotals() {
     });
     
     const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
-    const tax = subtotal * (taxRate / 100);
-    const total = subtotal + tax;
+    const taxMode = document.getElementById('taxMode').value;
     
-    document.getElementById('subtotalAmount').textContent = `¥${subtotal.toLocaleString()}`;
-    document.getElementById('taxAmount').textContent = `¥${Math.round(tax).toLocaleString()}`;
-    document.getElementById('totalAmount').textContent = `¥${Math.round(total).toLocaleString()}`;
+    let displaySubtotal, displayTax, displayTotal;
+    
+    if (taxMode === 'inclusive') {
+        // 税込み計算：入力金額に税が含まれている
+        displayTotal = subtotal;
+        displaySubtotal = Math.round(subtotal / (1 + taxRate / 100));
+        displayTax = displayTotal - displaySubtotal;
+    } else {
+        // 税抜き計算：従来通り
+        displaySubtotal = subtotal;
+        displayTax = Math.round(subtotal * (taxRate / 100));
+        displayTotal = displaySubtotal + displayTax;
+    }
+    
+    document.getElementById('subtotalAmount').textContent = `¥${displaySubtotal.toLocaleString()}`;
+    document.getElementById('taxAmount').textContent = `¥${displayTax.toLocaleString()}`;
+    document.getElementById('totalAmount').textContent = `¥${displayTotal.toLocaleString()}`;
 }
 
 // リアルタイムプレビュー更新
@@ -143,14 +160,14 @@ function updatePreview() {
     // フォームデータを取得
     const data = {
         billerCompany: document.getElementById('billerCompany').value,
-        billerName: document.getElementById('billerName').value,
         billerAddress: document.getElementById('billerAddress').value,
+        invoiceRegistrationNumber: document.getElementById('invoiceRegistrationNumber').value,
         clientCompany: document.getElementById('clientCompany').value,
-        clientName: document.getElementById('clientName').value,
         clientAddress: document.getElementById('clientAddress').value,
         invoiceNumber: document.getElementById('invoiceNumber').value,
         invoiceDate: document.getElementById('invoiceDate').value,
-        taxRate: parseFloat(document.getElementById('taxRate').value) || 0
+        taxRate: parseFloat(document.getElementById('taxRate').value) || 0,
+        taxMode: document.getElementById('taxMode').value
     };
     
     // 作業項目を取得
@@ -171,14 +188,24 @@ function updatePreview() {
         }
     });
     
-    const tax = subtotal * (data.taxRate / 100);
-    const total = subtotal + tax;
+    // 税計算
+    let displaySubtotal, displayTax, displayTotal;
+    
+    if (data.taxMode === 'inclusive') {
+        displayTotal = subtotal;
+        displaySubtotal = Math.round(subtotal / (1 + data.taxRate / 100));
+        displayTax = displayTotal - displaySubtotal;
+    } else {
+        displaySubtotal = subtotal;
+        displayTax = Math.round(subtotal * (data.taxRate / 100));
+        displayTotal = displaySubtotal + displayTax;
+    }
     
     // 合計金額を更新
     calculateTotals();
     
     // プレビューHTMLを生成
-    const previewHtml = generateInvoiceHTML(data, workItems, subtotal, tax, total);
+    const previewHtml = generateInvoiceHTML(data, workItems, displaySubtotal, displayTax, displayTotal);
     preview.innerHTML = previewHtml;
 }
 
@@ -189,7 +216,7 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
         return new Date(dateStr).toLocaleDateString('ja-JP');
     };
     
-    const hasBasicInfo = data.invoiceNumber || data.clientCompany;
+    const hasBasicInfo = data.clientCompany;
     
     if (!hasBasicInfo) {
         return `
@@ -213,16 +240,15 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
                 <!-- 請求元 -->
                 <div>
                     <h3 class="font-semibold text-gray-700 mb-3 pb-1 border-b">請求元</h3>
-                    ${data.billerCompany ? `<div class="font-medium text-lg mb-1">${data.billerCompany}</div>` : ''}
-                    ${data.billerName ? `<div class="text-gray-700 mb-2">${data.billerName}</div>` : ''}
+                    ${data.billerCompany ? `<div class="font-medium text-lg mb-2">${data.billerCompany}</div>` : ''}
+                    ${data.invoiceRegistrationNumber ? `<div class="text-gray-700 mb-2">インボイス登録番号: ${data.invoiceRegistrationNumber}</div>` : ''}
                     ${data.billerAddress ? `<div class="text-gray-600 text-sm whitespace-pre-line">${data.billerAddress}</div>` : ''}
                 </div>
                 
                 <!-- 請求先 -->
                 <div>
                     <h3 class="font-semibold text-gray-700 mb-3 pb-1 border-b">請求先</h3>
-                    ${data.clientCompany ? `<div class="font-medium text-lg mb-1">${data.clientCompany}</div>` : ''}
-                    ${data.clientName ? `<div class="text-gray-700 mb-2">${data.clientName}</div>` : ''}
+                    ${data.clientCompany ? `<div class="font-medium text-lg mb-2">${data.clientCompany}</div>` : ''}
                     ${data.clientAddress ? `<div class="text-gray-600 text-sm whitespace-pre-line">${data.clientAddress}</div>` : ''}
                 </div>
             </div>
@@ -262,27 +288,27 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
             <div class="flex justify-end">
                 <div class="w-72">
                     <div class="border border-gray-300 bg-gray-50 p-4">
+                        ${data.taxMode === 'inclusive' ? `
+                            <div class="flex justify-between py-2 text-sm text-gray-600">
+                                <span>（税込み金額から算出）</span>
+                            </div>
+                        ` : ''}
                         <div class="flex justify-between py-2">
                             <span>小計:</span>
                             <span class="font-medium">¥${subtotal.toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between py-2">
                             <span>消費税 (${data.taxRate}%):</span>
-                            <span class="font-medium">¥${Math.round(tax).toLocaleString()}</span>
+                            <span class="font-medium">¥${tax.toLocaleString()}</span>
                         </div>
                         <div class="border-t border-gray-400 pt-2 mt-2">
                             <div class="flex justify-between text-lg font-semibold">
                                 <span>合計:</span>
-                                <span class="text-blue-600">¥${Math.round(total).toLocaleString()}</span>
+                                <span class="text-blue-600">¥${total.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- フッター -->
-            <div class="mt-12 text-center text-sm text-gray-500">
-                この度はお仕事をいただき、ありがとうございます。
             </div>
         </div>
     `;
@@ -291,12 +317,11 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
 // PDF出力（ブラウザ印刷機能を使用）
 function printInvoice() {
     // 必須項目のチェック
-    const invoiceNumber = document.getElementById('invoiceNumber').value;
     const clientCompany = document.getElementById('clientCompany').value;
     const invoiceDate = document.getElementById('invoiceDate').value;
     
-    if (!invoiceNumber || !clientCompany || !invoiceDate) {
-        alert('請求書番号、請求先会社名、発行日は必須項目です。');
+    if (!clientCompany || !invoiceDate) {
+        alert('請求先会社名（お名前）、発行日は必須項目です。');
         return;
     }
     
@@ -321,6 +346,168 @@ function printInvoice() {
     
     // 印刷実行
     window.print();
+}
+
+// データ保存機能
+function saveFormData() {
+    try {
+        const formData = {
+            // 基本情報
+            billerCompany: document.getElementById('billerCompany').value,
+            billerAddress: document.getElementById('billerAddress').value,
+            invoiceRegistrationNumber: document.getElementById('invoiceRegistrationNumber').value,
+            clientCompany: document.getElementById('clientCompany').value,
+            clientAddress: document.getElementById('clientAddress').value,
+            invoiceNumber: document.getElementById('invoiceNumber').value,
+            invoiceDate: document.getElementById('invoiceDate').value,
+            taxRate: document.getElementById('taxRate').value,
+            taxMode: document.getElementById('taxMode').value,
+            
+            // 作業項目
+            workItems: []
+        };
+        
+        // 作業項目データを取得
+        const items = document.querySelectorAll('.work-item');
+        items.forEach(item => {
+            formData.workItems.push({
+                date: item.querySelector('.work-date').value,
+                description: item.querySelector('.work-description').value,
+                hours: item.querySelector('.work-hours').value,
+                rate: item.querySelector('.work-rate').value
+            });
+        });
+        
+        // ローカルストレージに保存
+        localStorage.setItem('invoiceFormData', JSON.stringify(formData));
+        
+        // 保存完了メッセージ
+        showSaveStatus('データを保存しました', 'success');
+        
+    } catch (error) {
+        showSaveStatus('保存に失敗しました', 'error');
+        console.error('Save error:', error);
+    }
+}
+
+// データ読み込み機能
+function loadFormData(showMessage = true) {
+    try {
+        const savedData = localStorage.getItem('invoiceFormData');
+        if (!savedData) {
+            if (showMessage) {
+                showSaveStatus('保存されたデータがありません', 'info');
+            }
+            return;
+        }
+        
+        const formData = JSON.parse(savedData);
+        
+        // 基本情報を復元
+        document.getElementById('billerCompany').value = formData.billerCompany || '';
+        document.getElementById('billerAddress').value = formData.billerAddress || '';
+        document.getElementById('invoiceRegistrationNumber').value = formData.invoiceRegistrationNumber || '';
+        document.getElementById('clientCompany').value = formData.clientCompany || '';
+        document.getElementById('clientAddress').value = formData.clientAddress || '';
+        document.getElementById('invoiceNumber').value = formData.invoiceNumber || '';
+        document.getElementById('invoiceDate').value = formData.invoiceDate || '';
+        document.getElementById('taxRate').value = formData.taxRate || '10';
+        document.getElementById('taxMode').value = formData.taxMode || 'exclusive';
+        
+        // 既存の作業項目をクリア
+        document.getElementById('workItems').innerHTML = '';
+        workItemIndex = 0;
+        
+        // 作業項目を復元
+        if (formData.workItems && formData.workItems.length > 0) {
+            formData.workItems.forEach(itemData => {
+                addWorkItem();
+                const currentItem = document.querySelector(`[data-index="${workItemIndex - 1}"]`);
+                if (currentItem) {
+                    currentItem.querySelector('.work-date').value = itemData.date || '';
+                    currentItem.querySelector('.work-description').value = itemData.description || '';
+                    currentItem.querySelector('.work-hours').value = itemData.hours || '';
+                    currentItem.querySelector('.work-rate').value = itemData.rate || '';
+                }
+            });
+        } else {
+            addWorkItem(); // 最低1つの項目は必要
+        }
+        
+        // プレビュー更新
+        updatePreview();
+        
+        if (showMessage) {
+            showSaveStatus('データを読み込みました', 'success');
+        }
+        
+    } catch (error) {
+        if (showMessage) {
+            showSaveStatus('読み込みに失敗しました', 'error');
+        }
+        console.error('Load error:', error);
+    }
+}
+
+// データクリア機能
+function clearFormData() {
+    if (confirm('保存されたデータと入力内容をすべてクリアしますか？')) {
+        try {
+            // ローカルストレージから削除
+            localStorage.removeItem('invoiceFormData');
+            
+            // フォームをリセット
+            document.querySelectorAll('input, textarea, select').forEach(element => {
+                if (element.type === 'date') {
+                    element.value = new Date().toISOString().split('T')[0];
+                } else if (element.id === 'taxRate') {
+                    element.value = '10';
+                } else if (element.id === 'taxMode') {
+                    element.value = 'exclusive';
+                } else {
+                    element.value = '';
+                }
+            });
+            
+            // 作業項目をリセット
+            document.getElementById('workItems').innerHTML = '';
+            workItemIndex = 0;
+            addWorkItem();
+            
+            // 請求書番号を再生成
+            generateInvoiceNumber();
+            
+            // プレビュー更新
+            updatePreview();
+            
+            showSaveStatus('データをクリアしました', 'success');
+            
+        } catch (error) {
+            showSaveStatus('クリアに失敗しました', 'error');
+            console.error('Clear error:', error);
+        }
+    }
+}
+
+// 保存ステータス表示
+function showSaveStatus(message, type = 'info') {
+    const statusElement = document.getElementById('saveStatus');
+    statusElement.textContent = message;
+    
+    // スタイル設定
+    statusElement.className = 'mt-2 text-sm';
+    if (type === 'success') {
+        statusElement.className += ' text-green-600';
+    } else if (type === 'error') {
+        statusElement.className += ' text-red-600';
+    } else {
+        statusElement.className += ' text-gray-600';
+    }
+    
+    // 3秒後にメッセージを消去
+    setTimeout(() => {
+        statusElement.textContent = '';
+    }, 3000);
 }
 
 // 初期化時に1回だけ実行

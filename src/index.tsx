@@ -270,19 +270,19 @@ app.get('/', (c) => {
                                 <h3 class="font-medium mb-3 text-gray-700">請求元</h3>
                                 <div class="space-y-3">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-1">会社名</label>
+                                        <label class="block text-sm font-medium text-gray-600 mb-1">会社名（お名前）</label>
                                         <input type="text" id="billerCompany" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                               placeholder="株式会社サンプル" onchange="updatePreview()">
+                                               placeholder="山田太郎 / 株式会社サンプル" onchange="updatePreview(); saveFormData()">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-1">担当者名</label>
-                                        <input type="text" id="billerName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                               placeholder="山田 太郎" onchange="updatePreview()">
+                                        <label class="block text-sm font-medium text-gray-600 mb-1">インボイス登録番号</label>
+                                        <input type="text" id="invoiceRegistrationNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                               placeholder="T1234567890123" onchange="updatePreview(); saveFormData()">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-1">住所</label>
                                         <textarea id="billerAddress" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
-                                                  placeholder="東京都渋谷区..." onchange="updatePreview()"></textarea>
+                                                  placeholder="東京都渋谷区..." onchange="updatePreview(); saveFormData()"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -292,41 +292,60 @@ app.get('/', (c) => {
                                 <h3 class="font-medium mb-3 text-gray-700">請求先</h3>
                                 <div class="space-y-3">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-1">会社名 *</label>
+                                        <label class="block text-sm font-medium text-gray-600 mb-1">会社名（お名前） *</label>
                                         <input type="text" id="clientCompany" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                               placeholder="クライアント株式会社" onchange="updatePreview()" required>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-1">担当者名</label>
-                                        <input type="text" id="clientName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                               placeholder="佐藤 花子" onchange="updatePreview()">
+                                               placeholder="佐藤花子 / クライアント株式会社" onchange="updatePreview(); saveFormData()" required>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-1">住所</label>
                                         <textarea id="clientAddress" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
-                                                  placeholder="大阪府大阪市..." onchange="updatePreview()"></textarea>
+                                                  placeholder="大阪府大阪市..." onchange="updatePreview(); saveFormData()"></textarea>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- 請求書基本情報 -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-600 mb-1">請求書番号 *</label>
+                                <label class="block text-sm font-medium text-gray-600 mb-1">請求書番号</label>
                                 <input type="text" id="invoiceNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                       placeholder="INV-2024-001" onchange="updatePreview()" required>
+                                       placeholder="INV-2024-001" onchange="updatePreview(); saveFormData()">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">発行日 *</label>
                                 <input type="date" id="invoiceDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                       onchange="updatePreview()" required>
+                                       onchange="updatePreview(); saveFormData()" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">税率 (%)</label>
                                 <input type="number" id="taxRate" step="0.1" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                       onchange="updatePreview()">
+                                       onchange="updatePreview(); saveFormData()">
                             </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-600 mb-1">計算方式</label>
+                                <select id="taxMode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                        onchange="updatePreview(); saveFormData()">
+                                    <option value="exclusive">税抜き計算</option>
+                                    <option value="inclusive">税込み計算</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 一時保存機能 -->
+                        <div class="mb-6 text-center">
+                            <div class="flex justify-center space-x-3">
+                                <button onclick="saveFormData()" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-md hover:bg-blue-200 transition-colors text-sm">
+                                    <i class="fas fa-save mr-2"></i>一時保存
+                                </button>
+                                <button onclick="loadFormData()" class="bg-green-100 text-green-700 px-4 py-2 rounded-md hover:bg-green-200 transition-colors text-sm">
+                                    <i class="fas fa-upload mr-2"></i>保存データ読込
+                                </button>
+                                <button onclick="clearFormData()" class="bg-red-100 text-red-700 px-4 py-2 rounded-md hover:bg-red-200 transition-colors text-sm">
+                                    <i class="fas fa-trash mr-2"></i>データクリア
+                                </button>
+                            </div>
+                            <div id="saveStatus" class="mt-2 text-sm text-gray-600"></div>
                         </div>
 
                         <!-- 作業項目 -->
