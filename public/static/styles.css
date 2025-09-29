@@ -1,0 +1,142 @@
+/* 請求書自動作成システム用カスタムスタイル */
+
+.invoice-form-group {
+    @apply mb-4;
+}
+
+.invoice-form-label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.invoice-form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.invoice-form-textarea {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none;
+}
+
+.invoice-table {
+    @apply w-full border-collapse border border-gray-300;
+}
+
+.invoice-table th {
+    @apply bg-gray-50 border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700;
+}
+
+.invoice-table td {
+    @apply border border-gray-300 px-4 py-2;
+}
+
+.invoice-summary {
+    @apply bg-gray-50 p-4 rounded-lg border border-gray-200;
+}
+
+.btn-primary {
+    @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors;
+}
+
+.btn-secondary {
+    @apply bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors;
+}
+
+.btn-success {
+    @apply bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors;
+}
+
+.btn-danger {
+    @apply bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors;
+}
+
+.btn-warning {
+    @apply bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors;
+}
+
+.alert-success {
+    @apply bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded;
+}
+
+.alert-error {
+    @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded;
+}
+
+/* 請求書プレビュー用スタイル */
+.invoice-preview {
+    @apply bg-white p-8 border border-gray-300 rounded-lg shadow-sm;
+    max-width: 21cm;
+    margin: 0 auto;
+}
+
+.invoice-header {
+    @apply border-b border-gray-300 pb-4 mb-6;
+}
+
+.invoice-title {
+    @apply text-3xl font-bold text-gray-800 mb-2;
+}
+
+.invoice-details {
+    @apply grid grid-cols-2 gap-6 mb-6;
+}
+
+.invoice-items-table {
+    @apply w-full border-collapse mb-6;
+}
+
+.invoice-items-table th,
+.invoice-items-table td {
+    @apply border border-gray-300 px-3 py-2 text-sm;
+}
+
+.invoice-items-table th {
+    @apply bg-gray-50 font-semibold;
+}
+
+.invoice-total {
+    @apply ml-auto w-64;
+}
+
+/* モーダル用スタイル */
+.modal-header {
+    @apply flex justify-between items-center p-6 border-b;
+}
+
+.modal-body {
+    @apply p-6;
+}
+
+.modal-footer {
+    @apply flex justify-end space-x-3 p-6 border-t bg-gray-50;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .invoice-details {
+        @apply grid-cols-1;
+    }
+    
+    .invoice-items-table {
+        @apply text-xs;
+    }
+    
+    .invoice-items-table th,
+    .invoice-items-table td {
+        @apply px-2 py-1;
+    }
+}
+
+/* 印刷用スタイル */
+@media print {
+    body {
+        @apply text-black bg-white;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+    
+    .invoice-preview {
+        @apply shadow-none border-0;
+        page-break-after: always;
+    }
+}
