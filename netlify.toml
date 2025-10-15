@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  functions = "dist"
+  publish = "dist"
+
+[functions]
+  directory = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/_worker"
+  status = 200
