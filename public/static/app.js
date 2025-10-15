@@ -2,6 +2,7 @@
 
 // グローバル変数
 let workItemIndex = 0;
+let transportItemIndex = 0;
 
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', function() {
@@ -9,6 +10,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializePage() {
+    // 請求先固定値設定
+    document.getElementById('clientCompany').value = '株式会社EduSupport';
+    document.getElementById('clientAddress').value = '東京都新宿区西新宿3-3-13 西新宿水間ビル6F';
+    
     // 初期値設定
     document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
     
@@ -20,6 +25,9 @@ function initializePage() {
     
     // 初期作業項目を1つ追加
     addWorkItem();
+    
+    // 初期交通費項目を1つ追加
+    addTransportItem();
     
     // 保存データがあれば読み込み
     loadFormData(false); // サイレント読み込み
@@ -38,16 +46,37 @@ function generateInvoiceNumber() {
     document.getElementById('invoiceNumber').value = invoiceNumber;
 }
 
-// 支払期限の自動計算（発行日翌月末まで）
+// 支払期限の自動計算（作業項目最終日翌月末まで）
 function calculateDueDate() {
-    const invoiceDate = document.getElementById('invoiceDate').value;
-    if (!invoiceDate) return;
+    // 作業項目から最終日を取得
+    const workItems = document.querySelectorAll('.work-item');
+    let latestWorkDate = null;
     
-    const date = new Date(invoiceDate);
-    // 翌月に移動
-    date.setMonth(date.getMonth() + 1);
+    workItems.forEach(item => {
+        const workDateStr = item.querySelector('.work-date').value;
+        if (workDateStr) {
+            const workDate = new Date(workDateStr);
+            if (!latestWorkDate || workDate > latestWorkDate) {
+                latestWorkDate = workDate;
+            }
+        }
+    });
+    
+    // 作業日がない場合は発行日を使用
+    if (!latestWorkDate) {
+        const invoiceDate = document.getElementById('invoiceDate').value;
+        if (invoiceDate) {
+            latestWorkDate = new Date(invoiceDate);
+        } else {
+            return; // 発行日もない場合は何もしない
+        }
+    }
+    
+    // 最終作業日の翌月末日を計算
+    const baseDate = new Date(latestWorkDate);
+    baseDate.setMonth(baseDate.getMonth() + 1);
     // その月の末日を取得（0日は前月の末日）
-    const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const nextMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0);
     
     // YYYY-MM-DD形式で設定
     const year = nextMonth.getFullYear();
@@ -70,29 +99,38 @@ function addWorkItem() {
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">日付 *</label>
                     <input type="date" class="work-date w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                           value="${new Date().toISOString().split('T')[0]}" onchange="updatePreview(); saveFormData()" required>
+                           value="${new Date().toISOString().split('T')[0]}" onchange="calculateDueDate(); updatePreview(); saveFormData()" required>
                 </div>
                 
-                <div>
+                <div class="lg:col-span-1">
                     <label class="block text-sm font-medium text-gray-600 mb-1">作業内容 *</label>
-                    <input type="text" class="work-description w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                           placeholder="例: ウェブサイト開発" onchange="updatePreview(); saveFormData()" required>
+                    <select class="work-description-select w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                            onchange="handleWorkDescriptionChange(${workItemIndex}); updatePreview(); saveFormData()" required>
+                        <option value="">選択してください</option>
+                        <option value="イベント">イベント</option>
+                        <option value="研究会参加">研究会参加</option>
+                        <option value="ミーティング参加">ミーティング参加</option>
+                        <option value="アカウント作成＆送付">アカウント作成＆送付</option>
+                        <option value="実験調査">実験調査</option>
+                        <option value="チラシパンフレット作成">チラシパンフレット作成</option>
+                        <option value="メルマガ">メルマガ</option>
+                        <option value="ウェブ記事作成">ウェブ記事作成</option>
+                        <option value="メールサポート">メールサポート</option>
+                        <option value="電話サポート">電話サポート</option>
+                        <option value="その他">その他</option>
+                    </select>
+                    <input type="text" class="work-description-other w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 mt-2" 
+                           placeholder="具体的な作業内容を入力" onchange="updatePreview(); saveFormData()" style="display: none;">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">時間 *</label>
                     <input type="number" step="0.5" class="work-hours w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                           placeholder="8.0" onchange="calculateItemAmount(${workItemIndex}); updatePreview(); saveFormData()" required>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">時給 *</label>
-                    <input type="number" class="work-rate w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                           placeholder="5000" onchange="calculateItemAmount(${workItemIndex}); updatePreview(); saveFormData()" required>
+                           placeholder="8.0" onchange="calculateItemAmountWithGlobalRate(${workItemIndex}); updatePreview(); saveFormData()" required>
                 </div>
             </div>
             
@@ -114,6 +152,7 @@ function removeWorkItem(index) {
     if (item && document.querySelectorAll('.work-item').length > 1) {
         item.remove();
         updateItemNumbers();
+        calculateDueDate(); // 支払期限を再計算
         updatePreview();
         saveFormData();
     } else if (document.querySelectorAll('.work-item').length === 1) {
@@ -129,49 +168,100 @@ function updateItemNumbers() {
     });
 }
 
-// 個別項目の金額計算
-function calculateItemAmount(index) {
+// 作業内容の選択を処理
+function handleWorkDescriptionChange(index) {
+    const item = document.querySelector(`[data-index="${index}"]`);
+    if (!item) return;
+    
+    const select = item.querySelector('.work-description-select');
+    const otherInput = item.querySelector('.work-description-other');
+    
+    if (select.value === 'その他') {
+        otherInput.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        otherInput.style.display = 'none';
+        otherInput.required = false;
+        otherInput.value = '';
+    }
+}
+
+// グローバル時給を使用した個別項目の金額計算
+function calculateItemAmountWithGlobalRate(index) {
     const item = document.querySelector(`[data-index="${index}"]`);
     if (!item) return;
     
     const hours = parseFloat(item.querySelector('.work-hours').value) || 0;
-    const rate = parseFloat(item.querySelector('.work-rate').value) || 0;
-    const amount = hours * rate;
+    const globalRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+    const amount = hours * globalRate;
     
     item.querySelector('.item-amount').textContent = `¥${amount.toLocaleString()}`;
     
     calculateTotals();
 }
 
-// 合計金額計算（税込み・税抜き対応）
-function calculateTotals() {
-    let subtotal = 0;
+// 個別項目の金額計算（互換性のため残存）
+function calculateItemAmount(index) {
+    calculateItemAmountWithGlobalRate(index);
+}
+
+// 全ての作業項目の金額を再計算
+function updateAllItemAmounts() {
     const items = document.querySelectorAll('.work-item');
+    items.forEach((item, index) => {
+        const dataIndex = item.getAttribute('data-index');
+        if (dataIndex !== null) {
+            calculateItemAmountWithGlobalRate(parseInt(dataIndex));
+        }
+    });
+}
+
+// 合計金額計算（税込み・税抜き対応、交通費含む）
+function calculateTotals() {
+    // 作業代金の計算
+    let workSubtotal = 0;
+    const workItems = document.querySelectorAll('.work-item');
+    const globalRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
     
-    items.forEach(item => {
+    workItems.forEach(item => {
         const hours = parseFloat(item.querySelector('.work-hours').value) || 0;
-        const rate = parseFloat(item.querySelector('.work-rate').value) || 0;
-        subtotal += hours * rate;
+        workSubtotal += hours * globalRate;
     });
     
+    // 交通費の計算
+    let transportSubtotal = 0;
+    const transportItems = document.querySelectorAll('.transport-item');
+    
+    transportItems.forEach(item => {
+        const amount = parseFloat(item.querySelector('.transport-amount').value) || 0;
+        transportSubtotal += amount;
+    });
+    
+    // 小計合計
+    const combinedSubtotal = workSubtotal + transportSubtotal;
+    
+    // 税計算（作業代金のみに適用）
     const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
     const taxMode = document.getElementById('taxMode').value;
     
-    let displaySubtotal, displayTax, displayTotal;
+    let displayWorkSubtotal, displayTax, displayTotal;
     
     if (taxMode === 'inclusive') {
-        // 税込み計算：入力金額に税が含まれている
-        displayTotal = subtotal;
-        displaySubtotal = Math.round(subtotal / (1 + taxRate / 100));
-        displayTax = displayTotal - displaySubtotal;
+        // 税込み計算：作業代金に税が含まれている
+        displayWorkSubtotal = Math.round(workSubtotal / (1 + taxRate / 100));
+        displayTax = workSubtotal - displayWorkSubtotal;
+        displayTotal = workSubtotal + transportSubtotal;
     } else {
-        // 税抜き計算：従来通り
-        displaySubtotal = subtotal;
-        displayTax = Math.round(subtotal * (taxRate / 100));
-        displayTotal = displaySubtotal + displayTax;
+        // 税抜き計算：作業代金に税率をかける
+        displayWorkSubtotal = workSubtotal;
+        displayTax = Math.round(workSubtotal * (taxRate / 100));
+        displayTotal = workSubtotal + displayTax + transportSubtotal;
     }
     
-    document.getElementById('subtotalAmount').textContent = `¥${displaySubtotal.toLocaleString()}`;
+    // 表示更新
+    document.getElementById('workSubtotalAmount').textContent = `¥${displayWorkSubtotal.toLocaleString()}`;
+    document.getElementById('transportSubtotalAmount').textContent = `¥${transportSubtotal.toLocaleString()}`;
+    document.getElementById('subtotalAmount').textContent = `¥${combinedSubtotal.toLocaleString()}`;
     document.getElementById('taxAmount').textContent = `¥${displayTax.toLocaleString()}`;
     document.getElementById('totalAmount').textContent = `¥${displayTotal.toLocaleString()}`;
 }
@@ -204,44 +294,70 @@ function updatePreview() {
     // 作業項目を取得
     const workItems = [];
     const items = document.querySelectorAll('.work-item');
-    let subtotal = 0;
+    let workSubtotal = 0;
+    const globalRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
     
     items.forEach(item => {
         const date = item.querySelector('.work-date').value;
-        const description = item.querySelector('.work-description').value;
-        const hours = parseFloat(item.querySelector('.work-hours').value) || 0;
-        const rate = parseFloat(item.querySelector('.work-rate').value) || 0;
-        const amount = hours * rate;
+        const select = item.querySelector('.work-description-select');
+        const otherInput = item.querySelector('.work-description-other');
+        let description = select.value;
         
-        if (date || description || hours || rate) {
-            workItems.push({ date, description, hours, rate, amount });
-            subtotal += amount;
+        // 「その他」の場合は具体的な内容を使用
+        if (description === 'その他' && otherInput.value) {
+            description = otherInput.value;
+        }
+        
+        const hours = parseFloat(item.querySelector('.work-hours').value) || 0;
+        const amount = hours * globalRate;
+        
+        if (date || description || hours) {
+            workItems.push({ date, description, hours, rate: globalRate, amount });
+            workSubtotal += amount;
         }
     });
     
-    // 税計算
-    let displaySubtotal, displayTax, displayTotal;
+    // 交通費項目を取得
+    const transportItems = [];
+    const transportItemElements = document.querySelectorAll('.transport-item');
+    let transportSubtotal = 0;
+    
+    transportItemElements.forEach(item => {
+        const date = item.querySelector('.transport-date').value;
+        const location = item.querySelector('.transport-location').value;
+        const method = item.querySelector('.transport-method').value;
+        const amount = parseFloat(item.querySelector('.transport-amount').value) || 0;
+        const memo = item.querySelector('.transport-memo').value;
+        
+        if (date || location || method || amount) {
+            transportItems.push({ date, location, method, amount, memo });
+            transportSubtotal += amount;
+        }
+    });
+    
+    // 税計算（作業代金のみ）
+    let displayWorkSubtotal, displayTax, displayTotal;
     
     if (data.taxMode === 'inclusive') {
-        displayTotal = subtotal;
-        displaySubtotal = Math.round(subtotal / (1 + data.taxRate / 100));
-        displayTax = displayTotal - displaySubtotal;
+        displayWorkSubtotal = Math.round(workSubtotal / (1 + data.taxRate / 100));
+        displayTax = workSubtotal - displayWorkSubtotal;
+        displayTotal = workSubtotal + transportSubtotal;
     } else {
-        displaySubtotal = subtotal;
-        displayTax = Math.round(subtotal * (data.taxRate / 100));
-        displayTotal = displaySubtotal + displayTax;
+        displayWorkSubtotal = workSubtotal;
+        displayTax = Math.round(workSubtotal * (data.taxRate / 100));
+        displayTotal = workSubtotal + displayTax + transportSubtotal;
     }
     
     // 合計金額を更新
     calculateTotals();
     
     // プレビューHTMLを生成
-    const previewHtml = generateInvoiceHTML(data, workItems, displaySubtotal, displayTax, displayTotal);
+    const previewHtml = generateInvoiceHTML(data, workItems, transportItems, displayWorkSubtotal, displayTax, displayTotal, transportSubtotal);
     preview.innerHTML = previewHtml;
 }
 
 // 請求書HTMLの生成
-function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
+function generateInvoiceHTML(data, workItems, transportItems, workSubtotal, tax, total, transportSubtotal) {
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         return new Date(dateStr).toLocaleDateString('ja-JP');
@@ -286,49 +402,85 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
             
             <!-- 作業項目テーブル -->
             ${workItems.length > 0 ? `
-                <table class="w-full border-collapse border border-gray-300 mb-6">
-                    <thead>
-                        <tr class="bg-gray-50">
-                            <th class="border border-gray-300 px-4 py-3 text-left">日付</th>
-                            <th class="border border-gray-300 px-4 py-3 text-left">作業内容</th>
-                            <th class="border border-gray-300 px-4 py-3 text-right">時間</th>
-                            <th class="border border-gray-300 px-4 py-3 text-right">時給</th>
-                            <th class="border border-gray-300 px-4 py-3 text-right">金額</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${workItems.map(item => `
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2">${formatDate(item.date)}</td>
-                                <td class="border border-gray-300 px-4 py-2">${item.description}</td>
-                                <td class="border border-gray-300 px-4 py-2 text-right">${item.hours ? item.hours + 'h' : ''}</td>
-                                <td class="border border-gray-300 px-4 py-2 text-right">${item.rate ? '¥' + item.rate.toLocaleString() : ''}</td>
-                                <td class="border border-gray-300 px-4 py-2 text-right font-medium">${item.amount ? '¥' + item.amount.toLocaleString() : ''}</td>
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold mb-2">作業項目</h3>
+                    <table class="w-full border-collapse border border-gray-300 text-xs mb-3">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="border border-gray-300 px-2 py-1 text-left">日付</th>
+                                <th class="border border-gray-300 px-2 py-1 text-left">作業内容</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right">時間</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right">時給</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right">金額</th>
                             </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${workItems.map(item => `
+                                <tr>
+                                    <td class="border border-gray-300 px-2 py-1">${formatDate(item.date)}</td>
+                                    <td class="border border-gray-300 px-2 py-1">${item.description}</td>
+                                    <td class="border border-gray-300 px-2 py-1 text-right">${item.hours ? item.hours + 'h' : ''}</td>
+                                    <td class="border border-gray-300 px-2 py-1 text-right">${item.rate ? '¥' + item.rate.toLocaleString() : ''}</td>
+                                    <td class="border border-gray-300 px-2 py-1 text-right font-medium">${item.amount ? '¥' + item.amount.toLocaleString() : ''}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            ` : ''}
+            
+            <!-- 交通費テーブル -->
+            ${transportItems.length > 0 ? `
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold mb-2">交通費</h3>
+                    <table class="w-full border-collapse border border-gray-300 text-xs mb-3">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="border border-gray-300 px-2 py-1 text-left">日付</th>
+                                <th class="border border-gray-300 px-2 py-1 text-left">場所</th>
+                                <th class="border border-gray-300 px-2 py-1 text-left">交通手段</th>
+                                <th class="border border-gray-300 px-2 py-1 text-right">金額</th>
+                                <th class="border border-gray-300 px-2 py-1 text-left">メモ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${transportItems.map(item => `
+                                <tr>
+                                    <td class="border border-gray-300 px-2 py-1">${formatDate(item.date)}</td>
+                                    <td class="border border-gray-300 px-2 py-1">${item.location}</td>
+                                    <td class="border border-gray-300 px-2 py-1">${item.method}</td>
+                                    <td class="border border-gray-300 px-2 py-1 text-right font-medium">${item.amount ? '¥' + item.amount.toLocaleString() : ''}</td>
+                                    <td class="border border-gray-300 px-2 py-1">${item.memo}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             ` : ''}
             
             <!-- 合計 -->
-            <div class="flex justify-end mb-8">
-                <div class="w-72">
-                    <div class="border border-gray-300 bg-gray-50 p-4">
+            <div class="flex justify-end mb-4">
+                <div class="w-64">
+                    <div class="border border-gray-300 bg-gray-50 p-3 text-sm">
                         ${data.taxMode === 'inclusive' ? `
-                            <div class="flex justify-between py-2 text-sm text-gray-600">
+                            <div class="flex justify-between py-1 text-xs text-gray-600">
                                 <span>（税込み金額から算出）</span>
                             </div>
                         ` : ''}
-                        <div class="flex justify-between py-2">
-                            <span>小計:</span>
-                            <span class="font-medium">¥${subtotal.toLocaleString()}</span>
+                        <div class="flex justify-between py-1">
+                            <span>作業代金:</span>
+                            <span class="font-medium">¥${workSubtotal.toLocaleString()}</span>
                         </div>
-                        <div class="flex justify-between py-2">
+                        <div class="flex justify-between py-1">
+                            <span>交通費:</span>
+                            <span class="font-medium">¥${transportSubtotal.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between py-1">
                             <span>消費税 (${data.taxRate}%):</span>
                             <span class="font-medium">¥${tax.toLocaleString()}</span>
                         </div>
-                        <div class="border-t border-gray-400 pt-2 mt-2">
-                            <div class="flex justify-between text-lg font-semibold">
+                        <div class="border-t border-gray-400 pt-1 mt-1">
+                            <div class="flex justify-between font-semibold">
                                 <span>合計:</span>
                                 <span class="text-blue-600">¥${total.toLocaleString()}</span>
                             </div>
@@ -371,30 +523,56 @@ function generateInvoiceHTML(data, workItems, subtotal, tax, total) {
 // PDF出力（ブラウザ印刷機能を使用）
 function printInvoice() {
     // 必須項目のチェック
-    const clientCompany = document.getElementById('clientCompany').value;
     const invoiceDate = document.getElementById('invoiceDate').value;
     
-    if (!clientCompany || !invoiceDate) {
-        alert('請求先会社名（お名前）、発行日は必須項目です。');
+    if (!invoiceDate) {
+        alert('発行日は必須項目です。');
         return;
     }
     
-    // 作業項目のチェック
+    // 作業項目と交通費のチェック
     const workItems = document.querySelectorAll('.work-item');
-    let hasValidItems = false;
+    const transportItems = document.querySelectorAll('.transport-item');
+    const globalRate = parseFloat(document.getElementById('hourlyRate').value) || 0;
+    let hasValidWorkItems = false;
+    let hasValidTransportItems = false;
     
+    // 作業項目の確認
     workItems.forEach(item => {
         const hours = parseFloat(item.querySelector('.work-hours').value) || 0;
-        const rate = parseFloat(item.querySelector('.work-rate').value) || 0;
-        const description = item.querySelector('.work-description').value;
+        const select = item.querySelector('.work-description-select');
+        const otherInput = item.querySelector('.work-description-other');
+        let description = select.value;
         
-        if (hours > 0 && rate > 0 && description) {
-            hasValidItems = true;
+        if (description === 'その他' && otherInput.value) {
+            description = otherInput.value;
+        }
+        
+        if (hours > 0 && globalRate > 0 && description) {
+            hasValidWorkItems = true;
         }
     });
     
-    if (!hasValidItems) {
-        alert('少なくとも1つの有効な作業項目（時間・時給・作業内容）を入力してください。');
+    // 交通費項目の確認
+    transportItems.forEach(item => {
+        const amount = parseFloat(item.querySelector('.transport-amount').value) || 0;
+        const location = item.querySelector('.transport-location').value;
+        const method = item.querySelector('.transport-method').value;
+        
+        if (amount > 0 && location && method) {
+            hasValidTransportItems = true;
+        }
+    });
+    
+    // 作業項目か交通費のどちらかは必須
+    if (!hasValidWorkItems && !hasValidTransportItems) {
+        alert('作業項目または交通費のいずれかを入力してください。\n\n【作業項目】時間・作業内容・時給\n【交通費】場所・交通手段・金額');
+        return;
+    }
+    
+    // 作業項目がある場合は時給必須
+    if (hasValidWorkItems && globalRate <= 0) {
+        alert('作業項目を入力する場合は時給を設定してください。');
         return;
     }
     
@@ -406,17 +584,18 @@ function printInvoice() {
 function saveFormData() {
     try {
         const formData = {
-            // 基本情報
+            // 基本情報（請求先は固定のため保存しない）
             billerCompany: document.getElementById('billerCompany').value,
             billerAddress: document.getElementById('billerAddress').value,
             invoiceRegistrationNumber: document.getElementById('invoiceRegistrationNumber').value,
-            clientCompany: document.getElementById('clientCompany').value,
-            clientAddress: document.getElementById('clientAddress').value,
             invoiceNumber: document.getElementById('invoiceNumber').value,
             invoiceDate: document.getElementById('invoiceDate').value,
             dueDate: document.getElementById('dueDate').value,
             taxRate: document.getElementById('taxRate').value,
             taxMode: document.getElementById('taxMode').value,
+            
+            // 基本設定
+            hourlyRate: document.getElementById('hourlyRate').value,
             
             // 振込先口座情報
             bankType: document.getElementById('bankType').value,
@@ -426,23 +605,51 @@ function saveFormData() {
             accountNumber: document.getElementById('accountNumber').value,
             accountHolder: document.getElementById('accountHolder').value,
             
+            // 個人識別
+            userIdentifier: document.getElementById('userIdentifier').value,
+            
             // 作業項目
-            workItems: []
+            workItems: [],
+            
+            // 交通費
+            transportItems: []
         };
         
         // 作業項目データを取得
         const items = document.querySelectorAll('.work-item');
         items.forEach(item => {
+            const select = item.querySelector('.work-description-select');
+            const otherInput = item.querySelector('.work-description-other');
+            let description = select.value;
+            if (description === 'その他' && otherInput.value) {
+                description = otherInput.value;
+            }
+            
             formData.workItems.push({
                 date: item.querySelector('.work-date').value,
-                description: item.querySelector('.work-description').value,
-                hours: item.querySelector('.work-hours').value,
-                rate: item.querySelector('.work-rate').value
+                descriptionSelect: select.value,
+                descriptionOther: otherInput.value,
+                description: description,
+                hours: item.querySelector('.work-hours').value
             });
         });
         
-        // ローカルストレージに保存
-        localStorage.setItem('invoiceFormData', JSON.stringify(formData));
+        // 交通費データを取得
+        const transportItems = document.querySelectorAll('.transport-item');
+        transportItems.forEach(item => {
+            formData.transportItems.push({
+                date: item.querySelector('.transport-date').value,
+                location: item.querySelector('.transport-location').value,
+                method: item.querySelector('.transport-method').value,
+                amount: item.querySelector('.transport-amount').value,
+                memo: item.querySelector('.transport-memo').value
+            });
+        });
+        
+        // ユーザー識別子に基づいてローカルストレージに保存
+        const userIdentifier = formData.userIdentifier || 'default';
+        const storageKey = `invoiceFormData_${userIdentifier}`;
+        localStorage.setItem(storageKey, JSON.stringify(formData));
         
         // 保存完了メッセージ
         showSaveStatus('データを保存しました', 'success');
@@ -456,7 +663,10 @@ function saveFormData() {
 // データ読み込み機能
 function loadFormData(showMessage = true) {
     try {
-        const savedData = localStorage.getItem('invoiceFormData');
+        // ユーザー識別子を取得
+        const userIdentifier = document.getElementById('userIdentifier').value || 'default';
+        const storageKey = `invoiceFormData_${userIdentifier}`;
+        const savedData = localStorage.getItem(storageKey);
         if (!savedData) {
             if (showMessage) {
                 showSaveStatus('保存されたデータがありません', 'info');
@@ -470,13 +680,22 @@ function loadFormData(showMessage = true) {
         document.getElementById('billerCompany').value = formData.billerCompany || '';
         document.getElementById('billerAddress').value = formData.billerAddress || '';
         document.getElementById('invoiceRegistrationNumber').value = formData.invoiceRegistrationNumber || '';
-        document.getElementById('clientCompany').value = formData.clientCompany || '';
-        document.getElementById('clientAddress').value = formData.clientAddress || '';
+        
+        // 請求先は固定値を再設定
+        document.getElementById('clientCompany').value = '株式会社EduSupport';
+        document.getElementById('clientAddress').value = '東京都新宿区西新宿3-3-13 西新宿水間ビル6F';
+        
         document.getElementById('invoiceNumber').value = formData.invoiceNumber || '';
         document.getElementById('invoiceDate').value = formData.invoiceDate || '';
         document.getElementById('dueDate').value = formData.dueDate || '';
         document.getElementById('taxRate').value = formData.taxRate || '10';
         document.getElementById('taxMode').value = formData.taxMode || 'exclusive';
+        
+        // 基本設定を復元
+        document.getElementById('hourlyRate').value = formData.hourlyRate || '';
+        
+        // 個人識別を復元
+        document.getElementById('userIdentifier').value = formData.userIdentifier || '';
         
         // 振込先口座情報を復元
         document.getElementById('bankType').value = formData.bankType || '';
@@ -497,14 +716,58 @@ function loadFormData(showMessage = true) {
                 const currentItem = document.querySelector(`[data-index="${workItemIndex - 1}"]`);
                 if (currentItem) {
                     currentItem.querySelector('.work-date').value = itemData.date || '';
-                    currentItem.querySelector('.work-description').value = itemData.description || '';
+                    
+                    // 作業内容の復元
+                    const select = currentItem.querySelector('.work-description-select');
+                    const otherInput = currentItem.querySelector('.work-description-other');
+                    select.value = itemData.descriptionSelect || '';
+                    otherInput.value = itemData.descriptionOther || '';
+                    
+                    // 「その他」の表示切替
+                    if (select.value === 'その他') {
+                        otherInput.style.display = 'block';
+                        otherInput.required = true;
+                    } else {
+                        otherInput.style.display = 'none';
+                        otherInput.required = false;
+                    }
+                    
                     currentItem.querySelector('.work-hours').value = itemData.hours || '';
-                    currentItem.querySelector('.work-rate').value = itemData.rate || '';
+                    
+                    // 金額を再計算
+                    calculateItemAmountWithGlobalRate(workItemIndex - 1);
                 }
             });
         } else {
             addWorkItem(); // 最低1つの項目は必要
         }
+        
+        // 既存の交通費項目をクリア
+        document.getElementById('transportItems').innerHTML = '';
+        transportItemIndex = 0;
+        
+        // 交通費を復元
+        if (formData.transportItems && formData.transportItems.length > 0) {
+            formData.transportItems.forEach(itemData => {
+                addTransportItem();
+                const currentItem = document.querySelector(`[data-index="${transportItemIndex - 1}"].transport-item`);
+                if (currentItem) {
+                    currentItem.querySelector('.transport-date').value = itemData.date || '';
+                    currentItem.querySelector('.transport-location').value = itemData.location || '';
+                    currentItem.querySelector('.transport-method').value = itemData.method || '';
+                    currentItem.querySelector('.transport-amount').value = itemData.amount || '';
+                    currentItem.querySelector('.transport-memo').value = itemData.memo || '';
+                }
+            });
+        } else {
+            addTransportItem(); // 最低1つの項目は必要
+        }
+        
+        // 交通費合計を再計算
+        calculateTransportTotals();
+        
+        // 支払期限を再計算
+        calculateDueDate();
         
         // プレビュー更新
         updatePreview();
@@ -525,8 +788,10 @@ function loadFormData(showMessage = true) {
 function clearFormData() {
     if (confirm('保存されたデータと入力内容をすべてクリアしますか？')) {
         try {
-            // ローカルストレージから削除
-            localStorage.removeItem('invoiceFormData');
+            // ユーザー識別子に基づいてローカルストレージから削除
+            const userIdentifier = document.getElementById('userIdentifier').value || 'default';
+            const storageKey = `invoiceFormData_${userIdentifier}`;
+            localStorage.removeItem(storageKey);
             
             // フォームをリセット
             document.querySelectorAll('input, textarea, select').forEach(element => {
@@ -547,6 +812,15 @@ function clearFormData() {
             document.getElementById('workItems').innerHTML = '';
             workItemIndex = 0;
             addWorkItem();
+            
+            // 交通費をリセット
+            document.getElementById('transportItems').innerHTML = '';
+            transportItemIndex = 0;
+            addTransportItem();
+            
+            // 請求先固定値を再設定
+            document.getElementById('clientCompany').value = '株式会社EduSupport';
+            document.getElementById('clientAddress').value = '東京都新宿区西新宿3-3-13 西新宿水間ビル6F';
             
             // 請求書番号を再生成
             generateInvoiceNumber();
@@ -585,6 +859,116 @@ function showSaveStatus(message, type = 'info') {
     setTimeout(() => {
         statusElement.textContent = '';
     }, 3000);
+}
+
+// 交通費項目を追加
+function addTransportItem() {
+    const container = document.getElementById('transportItems');
+    const itemHtml = `
+        <div class="transport-item bg-green-50 p-4 rounded-lg border border-green-200" data-index="${transportItemIndex}">
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="font-medium text-gray-700">交通費 ${transportItemIndex + 1}</h4>
+                <button onclick="removeTransportItem(${transportItemIndex})" class="text-red-600 hover:text-red-800 text-sm">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">日付 *</label>
+                    <input type="date" class="transport-date w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500" 
+                           value="${new Date().toISOString().split('T')[0]}" onchange="updatePreview(); saveFormData()" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">場所 *</label>
+                    <input type="text" class="transport-location w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500" 
+                           placeholder="東京駅→大阪駅" onchange="updatePreview(); saveFormData()" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">交通手段 *</label>
+                    <select class="transport-method w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500" 
+                            onchange="updatePreview(); saveFormData()" required>
+                        <option value="">選択してください</option>
+                        <option value="電車">電車</option>
+                        <option value="新幹線">新幹線</option>
+                        <option value="バス">バス</option>
+                        <option value="タクシー">タクシー</option>
+                        <option value="自家用車">自家用車</option>
+                        <option value="航空機">航空機</option>
+                        <option value="地下鉄">地下鉄</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">金額 *</label>
+                    <input type="number" class="transport-amount w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500" 
+                           placeholder="1000" onchange="calculateTransportTotals(); updatePreview(); saveFormData()" required>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <label class="block text-sm font-medium text-gray-600 mb-1">メモ</label>
+                <input type="text" class="transport-memo w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500" 
+                       placeholder="会議参加のため、往復" onchange="updatePreview(); saveFormData()">
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', itemHtml);
+    transportItemIndex++;
+    updateTransportItemNumbers();
+}
+
+// 交通費項目を削除
+function removeTransportItem(index) {
+    const item = document.querySelector(`[data-index="${index}"].transport-item`);
+    if (item && document.querySelectorAll('.transport-item').length > 1) {
+        item.remove();
+        updateTransportItemNumbers();
+        calculateTransportTotals();
+        updatePreview();
+        saveFormData();
+    } else if (document.querySelectorAll('.transport-item').length === 1) {
+        // 最後の項目の場合は空にする
+        const inputs = item.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            if (input.type === 'date') {
+                input.value = new Date().toISOString().split('T')[0];
+            } else {
+                input.value = '';
+            }
+        });
+        calculateTransportTotals();
+        updatePreview();
+        saveFormData();
+    }
+}
+
+// 交通費項目番号を更新
+function updateTransportItemNumbers() {
+    const items = document.querySelectorAll('.transport-item');
+    items.forEach((item, index) => {
+        item.querySelector('h4').textContent = `交通費 ${index + 1}`;
+    });
+}
+
+// 交通費合計計算
+function calculateTransportTotals() {
+    let transportTotal = 0;
+    const items = document.querySelectorAll('.transport-item');
+    
+    items.forEach(item => {
+        const amount = parseFloat(item.querySelector('.transport-amount').value) || 0;
+        transportTotal += amount;
+    });
+    
+    document.getElementById('transportSubtotalAmount').textContent = `¥${transportTotal.toLocaleString()}`;
+    
+    // 全体の計算を更新
+    calculateTotals();
 }
 
 // 初期化時に1回だけ実行

@@ -237,9 +237,57 @@ app.get('/', (c) => {
                     top: 0;
                     width: 100% !important;
                     background: white !important;
-                    padding: 20px !important;
+                    padding: 15px !important;
+                    font-size: 11px !important;
+                    line-height: 1.3 !important;
                 }
                 .no-print { display: none !important; }
+                
+                /* PDF最適化：1ページに収めるためのスタイル調整 */
+                #invoicePreview h1 { 
+                    font-size: 20px !important; 
+                    margin-bottom: 8px !important; 
+                }
+                #invoicePreview h3 { 
+                    font-size: 12px !important; 
+                    margin-bottom: 4px !important; 
+                }
+                #invoicePreview table { 
+                    font-size: 10px !important; 
+                    margin-bottom: 8px !important;
+                }
+                #invoicePreview table th,
+                #invoicePreview table td { 
+                    padding: 3px !important; 
+                    line-height: 1.2 !important;
+                }
+                #invoicePreview .mb-6 { 
+                    margin-bottom: 12px !important; 
+                }
+                #invoicePreview .mb-4 { 
+                    margin-bottom: 8px !important; 
+                }
+                #invoicePreview .mb-8 { 
+                    margin-bottom: 10px !important; 
+                }
+                #invoicePreview .p-4 { 
+                    padding: 8px !important; 
+                }
+                #invoicePreview .p-3 { 
+                    padding: 6px !important; 
+                }
+                #invoicePreview .text-xl { 
+                    font-size: 14px !important; 
+                }
+                #invoicePreview .text-lg { 
+                    font-size: 12px !important; 
+                }
+                #invoicePreview .text-sm { 
+                    font-size: 9px !important; 
+                }
+                #invoicePreview .text-xs { 
+                    font-size: 8px !important; 
+                }
             }
         </style>
     </head>
@@ -271,13 +319,13 @@ app.get('/', (c) => {
                                 <div class="space-y-3">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-1">会社名（お名前） *</label>
-                                        <input type="text" id="clientCompany" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                               placeholder="佐藤花子 / クライアント株式会社" onchange="updatePreview(); saveFormData()" required>
+                                        <input type="text" id="clientCompany" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700" 
+                                               value="株式会社EduSupport" readonly title="請求先は固定されています">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-1">住所</label>
-                                        <textarea id="clientAddress" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
-                                                  placeholder="大阪府大阪市..." onchange="updatePreview(); saveFormData()"></textarea>
+                                        <textarea id="clientAddress" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 resize-none" 
+                                                  readonly title="請求先住所は固定されています">東京都新宿区西新宿3-3-13 西新宿水間ビル6F</textarea>
                                     </div>
                                 </div>
                             </div>
@@ -305,34 +353,46 @@ app.get('/', (c) => {
                             </div>
                         </div>
 
+                        <!-- 基本設定（時給） -->
+                        <div class="mb-6">
+                            <h3 class="font-medium mb-3 text-gray-700">基本設定</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">時給 *</label>
+                                    <input type="number" id="hourlyRate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                           placeholder="5000" onchange="updateAllItemAmounts(); updatePreview(); saveFormData()" required>
+                                    <p class="text-xs text-gray-500 mt-1">すべての作業項目に適用されます</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 振込先口座情報 -->
                         <div class="mb-6">
                             <h3 class="font-medium mb-3 text-gray-700">振込先口座情報</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">金融機関種別</label>
-                                    <select id="bankType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                            onchange="updatePreview(); saveFormData()">
-                                        <option value="">選択してください</option>
-                                        <option value="銀行">銀行</option>
-                                        <option value="信用金庫">信用金庫</option>
-                                        <option value="信用組合">信用組合</option>
-                                        <option value="労働金庫">労働金庫</option>
-                                        <option value="農業協同組合">農業協同組合</option>
-                                        <option value="郵便局">郵便局（ゆうちょ銀行）</option>
-                                        <option value="ネット銀行">ネット銀行</option>
-                                        <option value="その他">その他</option>
-                                    </select>
-                                </div>
-                                <div>
+                                <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-gray-600 mb-1">金融機関名</label>
-                                    <input type="text" id="bankName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                           placeholder="○○銀行 / ○○信用金庫" onchange="updatePreview(); saveFormData()">
+                                    <div class="flex gap-2">
+                                        <input type="text" id="bankName" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                               placeholder="○○銀行 / ○○信用金庫" onchange="updatePreview(); saveFormData()">
+                                        <select id="bankType" class="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                                onchange="updatePreview(); saveFormData()">
+                                            <option value="">種別</option>
+                                            <option value="銀行">銀行</option>
+                                            <option value="信用金庫">信金</option>
+                                            <option value="信用組合">信組</option>
+                                            <option value="労働金庫">労金</option>
+                                            <option value="農業協同組合">農協</option>
+                                            <option value="郵便局">郵便局</option>
+                                            <option value="ネット銀行">ネット銀行</option>
+                                            <option value="その他">その他</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-600 mb-1">支店名</label>
                                     <input type="text" id="branchName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                           placeholder="△△支店 / ○○営業部" onchange="updatePreview(); saveFormData()">
+                                           placeholder="△△支店" onchange="updatePreview(); saveFormData()">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-600 mb-1">口座種別</label>
@@ -363,6 +423,19 @@ app.get('/', (c) => {
                             </div>
                         </div>
 
+                        <!-- 個人識別（複数スタッフ対応） -->
+                        <div class="mb-6">
+                            <h3 class="font-medium mb-3 text-gray-700">個人識別（複数スタッフ利用時）</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-600 mb-1">あなたの識別名</label>
+                                    <input type="text" id="userIdentifier" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                           placeholder="山田太郎 / yamada01" onchange="saveFormData()" maxlength="20">
+                                    <p class="text-xs text-gray-500 mt-1">他のスタッフと区別するための識別名（20文字以内）</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- 請求書基本情報 -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
                             <div>
@@ -378,7 +451,7 @@ app.get('/', (c) => {
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">支払期限</label>
                                 <input type="date" id="dueDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50" 
-                                       onchange="updatePreview(); saveFormData()" readonly title="発行日翌月末まで（自動計算）">
+                                       onchange="updatePreview(); saveFormData()" readonly title="作業項目最終日翌月末まで（自動計算）">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">税率 (%)</label>
@@ -425,10 +498,32 @@ app.get('/', (c) => {
                             </div>
                         </div>
 
+                        <!-- 交通費 -->
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-medium text-gray-700">交通費</h3>
+                                <button onclick="addTransportItem()" class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors text-sm">
+                                    <i class="fas fa-plus mr-1"></i>交通費を追加
+                                </button>
+                            </div>
+                            
+                            <div id="transportItems" class="space-y-4">
+                                <!-- 交通費項目がここに追加されます -->
+                            </div>
+                        </div>
+
                         <!-- 合計表示 -->
                         <div class="bg-gray-50 p-4 rounded-lg">
                             <div class="flex justify-between mb-2">
-                                <span class="text-gray-600">小計:</span>
+                                <span class="text-gray-600">作業代金小計:</span>
+                                <span id="workSubtotalAmount" class="font-medium">¥0</span>
+                            </div>
+                            <div class="flex justify-between mb-2">
+                                <span class="text-gray-600">交通費小計:</span>
+                                <span id="transportSubtotalAmount" class="font-medium">¥0</span>
+                            </div>
+                            <div class="flex justify-between mb-2">
+                                <span class="text-gray-600">小計合計:</span>
                                 <span id="subtotalAmount" class="font-medium">¥0</span>
                             </div>
                             <div class="flex justify-between mb-2">
