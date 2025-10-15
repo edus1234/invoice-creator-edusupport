@@ -925,22 +925,9 @@ function addTransportItem() {
 // 交通費項目を削除
 function removeTransportItem(index) {
     const item = document.querySelector(`[data-index="${index}"].transport-item`);
-    if (item && document.querySelectorAll('.transport-item').length > 1) {
+    if (item) {
         item.remove();
         updateTransportItemNumbers();
-        calculateTransportTotals();
-        updatePreview();
-        saveFormData();
-    } else if (document.querySelectorAll('.transport-item').length === 1) {
-        // 最後の項目の場合は空にする
-        const inputs = item.querySelectorAll('input, select');
-        inputs.forEach(input => {
-            if (input.type === 'date') {
-                input.value = new Date().toISOString().split('T')[0];
-            } else {
-                input.value = '';
-            }
-        });
         calculateTransportTotals();
         updatePreview();
         saveFormData();
