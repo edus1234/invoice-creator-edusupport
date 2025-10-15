@@ -875,21 +875,21 @@ function addTransportItem() {
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">日付 *</label>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">日付</label>
                     <input type="date" class="transport-date w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500" 
-                           value="${new Date().toISOString().split('T')[0]}" onchange="updatePreview(); saveFormData()" required>
+                           value="${new Date().toISOString().split('T')[0]}" onchange="updatePreview(); saveFormData()">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">場所 *</label>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">場所</label>
                     <input type="text" class="transport-location w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500" 
-                           placeholder="東京駅→大阪駅" onchange="updatePreview(); saveFormData()" required>
+                           placeholder="東京駅→大阪駅" onchange="updatePreview(); saveFormData()">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">交通手段 *</label>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">交通手段</label>
                     <select class="transport-method w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500" 
-                            onchange="updatePreview(); saveFormData()" required>
+                            onchange="updatePreview(); saveFormData()">
                         <option value="">選択してください</option>
                         <option value="電車">電車</option>
                         <option value="新幹線">新幹線</option>
@@ -903,9 +903,9 @@ function addTransportItem() {
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">金額 *</label>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">金額</label>
                     <input type="number" class="transport-amount w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500" 
-                           placeholder="1000" onchange="calculateTransportTotals(); updatePreview(); saveFormData()" required>
+                           placeholder="1000" onchange="calculateTransportTotals(); updatePreview(); saveFormData()">
                 </div>
             </div>
             
